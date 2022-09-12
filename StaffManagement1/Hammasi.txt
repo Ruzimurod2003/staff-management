@@ -1,0 +1,96 @@
+﻿
+<---HomeController--->
+using Microsoft.AspNetCore.Mvc;
+using StaffManagement1.Models;
+using StaffManagement1.ViewModels;
+
+namespace StaffManagement1.Controllers;
+
+[Route("[controller]")]
+public class HomeController : Controller
+{
+    private readonly IStaffRepository _staffRepository;
+
+    public HomeController(IStaffRepository staffRepository)
+    {
+        _staffRepository = new MockStaffRepository();
+    }
+    [Route("")]
+    [Route("/")]
+    [Route("[action]")]
+    public ViewResult Index()
+    {
+        HomeIndexViewModel viewModel = new HomeIndexViewModel()
+        {
+            Staffs = _staffRepository.GetAll()
+        };
+        return View(viewModel);
+    }
+    [Route("Details")]
+    public ViewResult Details()
+    {
+        /* Staff model = _staffRepository.Get(1);
+         ViewData["staff"] = model;
+         ViewBag.turtle = "Bu ihtiyoriy narsa";
+         ViewData["title"] = "Staff details";
+         return View(model);*/
+        HomeDetailsViewModel viewModel = new HomeDetailsViewModel()
+        {
+            Staff = _staffRepository.Get(1),
+            Title = "Staff details"
+        };
+        return View(viewModel);
+    }
+    [Route("DetailsId/{id?}")]
+    public ViewResult DetailsId(int? id)
+    {
+        HomeDetailsViewModel viewModel = new HomeDetailsViewModel()
+        {
+            //agar id null bo'lsa idisi birga teng hodim olinadi
+            Staff = _staffRepository.Get(id??1),
+            Title = "Staff details"
+        };
+        return View(viewModel);
+    }
+    [Route("[action]")]
+    public JsonResult Data()
+    {
+        return Json(new { id = 45, firsName = "Ruzimurod", lastName = "Abdunazarov" });
+    }
+    [Route("Staff")]
+    public string? Staff()
+    {
+        return _staffRepository.Get(2)?.LastName;
+    }
+}
+
+
+
+<------Programm.cs----->
+
+using StaffManagement1.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMvc(option=>option.EnableEndpointRouting=false);
+builder.Services.AddSingleton<IStaffRepository, MockStaffRepository>();
+
+var app = builder.Build();
+
+//app.MapGet("/", () => "Hello World!");
+app.UseStaticFiles();
+//app.UseMvcWithDefaultRoute();
+
+/*app.UseMvc(builder =>
+{
+    builder.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+});*/
+
+app.UseMvc();
+
+app.Run();
+
+
+
+<-----Views----->
+<a href="/home/details/@staff.Id" class="btn btn-primary">View</a>
